@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" data-bs-theme="dark">
+    <head>
+        <title>PromoHUB Santiago</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+              rel="stylesheet"
+              integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+              crossorigin="anonymous">
+
+        <style>
+            body {
+                font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+                background: radial-gradient(
+                    circle at top left,
+                    #1e293b 0%,
+                    #0f172a 45%,
+                    #020617 100%
+                    );
+                color: #e5e7eb;
+                min-height: 100vh;
+            }
+
+            h1 {
+                font-weight: 700;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+            }
+
+            .card {
+                background-color: #1e293b;
+                border: 1px solid #334155;
+            }
+
+            .card-header {
+                background-color: #2563eb;
+                color: white;
+                font-weight: 600;
+            }
+
+            .card-title {
+                color: #f8fafc;
+                font-weight: 600;
+            }
+
+            .card-body {
+                color: #e5e7eb;
+            }
+
+            .card-footer {
+                background-color: #020617;
+                color: #94a3b8;
+            }
+
+            .text-muted {
+                color: #94a3b8 !important;
+            }
+
+            .list-group-item {
+                background-color: transparent;
+                color: #e5e7eb;
+                border-color: #334155;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container mt-5">
+
+            <h1 class="text-center mb-4">
+                Promociones en Santiago Del Estero
+            </h1>
+
+            <div class="mb-4 text-center">
+                <a href="/" class="btn btn-outline-secondary btn-sm m-1">Todas</a>
+                <a href="/?categoria=SUPERMERCADOS" class="btn btn-outline-primary btn-sm m-1">🛒 Supermercados</a>
+                <a href="/?categoria=FARMACIA" class="btn btn-outline-primary btn-sm m-1">💊 Farmacia</a>
+                <a href="/?categoria=COMBUSTIBLES" class="btn btn-outline-primary btn-sm m-1">⛽ Combustibles</a>
+                <a href="/?categoria=VARIOS" class="btn btn-outline-primary btn-sm m-1">Varios</a>
+                <a href="/?vigenteHoy=true" class="btn btn-outline-info btn-sm m-1">📅 Solo Vigentes Hoy</a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(Promociones.content)}"
+                 class="alert alert-warning text-center shadow">
+                No hay promociones para esta categoría 😕
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-4" th:each="promo : ${Promociones}">
+                    <div class="card h-100 shadow-sm">
+
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span th:text="${promo.categoria}">CATEGORIA</span>
+
+                            <span class="badge bg-light text-primary fw-bold"
+                                  th:text="${promo.entidad}">
+                                ENTIDAD
+                            </span>
+                        </div>
+
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${promo.titulo}">
+                                Título Promo
+                            </h5>
+
+                            <p class="card-text text-muted small"
+                               th:text="${promo.descripcion}">
+                                Descripción
+                            </p>
+
+                            <hr>
+
+                            <h6 class="small text-uppercase text-secondary fw-semibold">
+                                Comercios Adheridos:
+                            </h6>
+
+                            <ul class="list-group list-group-flush"
+                                style="max-height: 150px; overflow-y: auto;">
+                                <li class="list-group-item p-1 small"
+                                    th:each="comercio : ${promo.comercios}"
+                                    th:text="${comercio}">
+                                    Nombre Comercio
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="card-footer small">
+                            Vigencia:
+                            <span class="text-info" th:text="${promo.fechaInicio}">Inicio</span>
+                            al
+                            <span class="text-info" th:text="${promo.fechaFin}">Fin</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div> <nav aria-label="Navegación de páginas" class="mt-4 mb-5" th:if="${Promociones.totalPages > 1}">
+                <ul class="pagination justify-content-center">
+                    
+                    <li class="page-item" th:classappend="${Promociones.first} ? 'disabled'">
+                        <a class="page-link" 
+                           th:href="@{/(page=${Promociones.number - 1}, categoria=${categoriaSeleccionada}, esvigente=${vigenteHoy})}">
+                           Anterior
+                        </a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <a class="page-link">
+                            Página <span th:text="${Promociones.number + 1}">1</span> de <span th:text="${Promociones.totalPages}">1</span>
+                        </a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${Promociones.last} ? 'disabled'">
+                        <a class="page-link" 
+                           th:href="@{/(page=${Promociones.number + 1}, categoria=${categoriaSeleccionada}, esvigente=${vigenteHoy})}">
+                           Siguiente
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+        </div> </body>
+</html>
