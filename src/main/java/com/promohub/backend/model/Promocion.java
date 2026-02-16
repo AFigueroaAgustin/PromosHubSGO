@@ -1,6 +1,5 @@
 package com.promohub.backend.model;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -20,7 +19,7 @@ public class Promocion {
     private String entidad;
     private String titulo;
     private String categoria;
-    
+
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
@@ -31,7 +30,6 @@ public class Promocion {
     private List<String> comercios;
 
     //Constructores
-
     public Promocion() {
     }
 
@@ -46,8 +44,20 @@ public class Promocion {
         this.comercios = comercios;
     }
 
-    
-    
+    private void validarTextoObligatorio(String valor, String campo) {
+        if (valor == null || valor.isBlank()) {
+            throw new IllegalArgumentException(campo + " es obligatorio");
+        }
+    }
+
+    private void validarRangoFechas(LocalDate inicio, LocalDate fin) {
+        if (inicio != null && fin != null && fin.isBefore(inicio)) {
+            throw new IllegalArgumentException(
+                    "La fecha fin no puede ser anterior a la fecha inicio"
+            );
+        }
+    }
+
     // Getters
     public Long getId() {
         return id;
@@ -81,18 +91,18 @@ public class Promocion {
         return comercios;
     }
 
-    
-    
     // Setters
     public void setId(Long id) {
         this.id = id;
     }
 
     public void setEntidad(String entidad) {
+        validarTextoObligatorio(entidad, "La Entidad");
         this.entidad = entidad;
     }
 
     public void setTitulo(String titulo) {
+        validarTextoObligatorio(titulo, "El Titulo");
         this.titulo = titulo;
     }
 
@@ -105,21 +115,23 @@ public class Promocion {
     }
 
     public void setFechaInicio(LocalDate fechaInicio) {
+        
         this.fechaInicio = fechaInicio;
+        validarRangoFechas(fechaInicio, fechaFin);
     }
 
     public void setFechaFin(LocalDate fechaFin) {
         this.fechaFin = fechaFin;
+        validarRangoFechas(fechaInicio, fechaFin);
     }
 
     public void setComercios(List<String> comercios) {
-        this.comercios = comercios;
+        this.comercios = (comercios != null) ? comercios : List.of();
     }
 
     public boolean estaVigente(LocalDate fecha) {
-    return (fecha.isEqual(fechaInicio) ||fecha.isAfter(fechaInicio))
-        && (fecha.isEqual(fechaFin) || fecha.isBefore(fechaFin));
-}
-
+        return (fecha.isEqual(fechaInicio) || fecha.isAfter(fechaInicio))
+                && (fecha.isEqual(fechaFin) || fecha.isBefore(fechaFin));
+    }
 
 }

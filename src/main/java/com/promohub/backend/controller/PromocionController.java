@@ -4,7 +4,6 @@ import com.promohub.backend.dto.PromocionDTO;
 import com.promohub.backend.model.Promocion;
 import com.promohub.backend.service.PromocionService;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
