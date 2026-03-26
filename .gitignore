@@ -1,11 +1,13 @@
-# --- Archivos de Proyecto (Spring Boot) ---
+# --- Spring Boot / Maven ---
 HELP.md
 target/
+out/
+
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# --- NetBeans ( ---
+# --- NetBeans ---
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -14,31 +16,38 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-# Estos dos son clave para que no se suba tu config local:
 nb-configuration.xml
 nbactions.xml
 
-# --- IDEs Varios  ---
-# STS / Eclipse
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-
-# IntelliJ IDEA
-.idea
+# --- IntelliJ IDEA ---
+.idea/
 *.iws
 *.iml
 *.ipr
 
-# VS Code
+# --- Eclipse / STS ---
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+# --- VS Code ---
 .vscode/
 
-# --- Archivos del Sistema Operativo (Basura) ---
+# --- Java ---
+*.class
+
+# --- Environment / local config ---
+.env
+.env.*
+
+# --- OS files ---
 .DS_Store
 Thumbs.db
+
+# --- Logs ---
 *.log

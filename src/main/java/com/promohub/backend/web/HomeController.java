@@ -1,5 +1,6 @@
 package com.promohub.backend.web;
 
+import com.promohub.backend.dto.PromocionDTO;
 import com.promohub.backend.model.Promocion;
 import com.promohub.backend.service.PromocionService;
 import org.springframework.data.domain.Page;
@@ -21,15 +22,17 @@ public class HomeController {
 
     @GetMapping("/") //Home
     public String home(@RequestParam(required = false) String categoria,
-            @RequestParam(required = false) Boolean esvigente, Model model,Pageable pageable) {
+                       @RequestParam(required = false) Boolean esvigente,
+                       Model model,Pageable pageable) {
 
 
-        Page<Promocion> promociones = promocionService.filtrarPromociones(categoria, esvigente,pageable);
+        Page<PromocionDTO> promociones = promocionService.filtrarPromociones(categoria, esvigente,pageable);
         
-        model.addAttribute("Promociones", promociones);
+        model.addAttribute("promociones", promociones);
+        model.addAttribute("totalPages",promociones.getTotalPages());
+        model.addAttribute("currentPage",promociones.getNumber());
         model.addAttribute("categoriaSeleccionada", categoria);
         model.addAttribute("vigenteHoy", esvigente);
-        model.addAttribute("pageable", pageable);
         return "index";
     }
 

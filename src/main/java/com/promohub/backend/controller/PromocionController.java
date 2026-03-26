@@ -1,19 +1,15 @@
 package com.promohub.backend.controller;
 
 import com.promohub.backend.dto.PromocionDTO;
-import com.promohub.backend.model.Promocion;
+import com.promohub.backend.dto.response.PageResponse;
 import com.promohub.backend.service.PromocionService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/promociones")
@@ -28,19 +24,24 @@ public class PromocionController {
 
     //endpoints
     @GetMapping
-    public Page<Promocion> obtenerPromociones(@RequestParam(required = false) String categoria,
-            @RequestParam(required = false) Boolean esvigente,Pageable pageable) {
-        Page<Promocion> promociones=promocionService.filtrarPromociones(categoria, esvigente,pageable);
-        
-        return promociones;
+    public ResponseEntity<PageResponse<PromocionDTO>> obtenerPromociones(
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) Boolean esvigente,
+            @PageableDefault(sort = "fechaFin") Pageable pageable) {
+
+        Page<PromocionDTO> page=promocionService.filtrarPromociones(categoria, esvigente,pageable);
+        return ResponseEntity.ok(PageResponse.from(page));
+    }
+    // GET /api/promociones/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<PromocionDTO> obtenerPromocionesPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(promocionService.getById(id));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Promocion crearPromocion(@Valid @RequestBody PromocionDTO dto) {
-
-            Promocion promoguardada = promocionService.guardarPromocion(dto);
-            return promoguardada;
+    public ResponseEntity<PromocionDTO> crearPromocion(@Valid @RequestBody PromocionDTO dto) {
+            PromocionDTO creada = promocionService.guardarPromocion(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(creada);
 
 }
 }
