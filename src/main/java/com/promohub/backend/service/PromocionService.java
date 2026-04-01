@@ -1,6 +1,7 @@
 package com.promohub.backend.service;
 
 import com.promohub.backend.dto.PromocionDTO;
+import com.promohub.backend.dto.VigenciaDTO;
 import com.promohub.backend.exception.DuplicateResourceException;
 import com.promohub.backend.exception.InvalidFechaException;
 import com.promohub.backend.exception.ResourceNotFoundException;
@@ -118,6 +119,12 @@ public class PromocionService {
         dto.setCategoria(p.getCategoria());
         dto.setDescripcion(p.getDescripcion());
         dto.setComerciosAdheridos(p.getComercios());
+
+        VigenciaDTO vigenciaDTO = new VigenciaDTO();
+        vigenciaDTO.setInicio(p.getFechaInicio().toString());
+        vigenciaDTO.setFin(p.getFechaFin().toString());
+        dto.setVigencia(vigenciaDTO);
+
         return dto;
     }
 

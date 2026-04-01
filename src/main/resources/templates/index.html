@@ -82,16 +82,16 @@
                 <a href="/?categoria=FARMACIA" class="btn btn-outline-primary btn-sm m-1">💊 Farmacia</a>
                 <a href="/?categoria=COMBUSTIBLES" class="btn btn-outline-primary btn-sm m-1">⛽ Combustibles</a>
                 <a href="/?categoria=VARIOS" class="btn btn-outline-primary btn-sm m-1">Varios</a>
-                <a href="/?vigenteHoy=true" class="btn btn-outline-info btn-sm m-1">📅 Solo Vigentes Hoy</a>
+                <a href="/?esvigente=true" class="btn btn-outline-info btn-sm m-1">📅 Solo Vigentes Hoy</a>
             </div>
 
-            <div th:if="${#lists.isEmpty(Promociones.content)}"
+            <div th:if="${#lists.isEmpty(promociones.content)}"
                  class="alert alert-warning text-center shadow">
                 No hay promociones para esta categoría 😕
             </div>
 
             <div class="row">
-                <div class="col-md-4 mb-4" th:each="promo : ${Promociones}">
+                <div class="col-md-4 mb-4" th:each="promo : ${promociones}">
                     <div class="card h-100 shadow-sm">
 
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -122,7 +122,7 @@
                             <ul class="list-group list-group-flush"
                                 style="max-height: 150px; overflow-y: auto;">
                                 <li class="list-group-item p-1 small"
-                                    th:each="comercio : ${promo.comercios}"
+                                    th:each="comercio : ${promo.comerciosAdheridos}"
                                     th:text="${comercio}">
                                     Nombre Comercio
                                 </li>
@@ -131,32 +131,32 @@
 
                         <div class="card-footer small">
                             Vigencia:
-                            <span class="text-info" th:text="${promo.fechaInicio}">Inicio</span>
+                            <span class="text-info" th:text="${promo.vigencia.inicio}">Inicio</span>
                             al
-                            <span class="text-info" th:text="${promo.fechaFin}">Fin</span>
+                            <span class="text-info" th:text="${promo.vigencia.fin}">Fin</span>
                         </div>
 
                     </div>
                 </div>
-            </div> <nav aria-label="Navegación de páginas" class="mt-4 mb-5" th:if="${Promociones.totalPages > 1}">
+            </div> <nav aria-label="Navegación de páginas" class="mt-4 mb-5" th:if="${promociones.totalPages > 1}">
                 <ul class="pagination justify-content-center">
                     
-                    <li class="page-item" th:classappend="${Promociones.first} ? 'disabled'">
+                    <li class="page-item" th:classappend="${promociones.first} ? 'disabled'">
                         <a class="page-link" 
-                           th:href="@{/(page=${Promociones.number - 1}, categoria=${categoriaSeleccionada}, esvigente=${vigenteHoy})}">
+                           th:href="@{/(page=${promociones.number - 1}, categoria=${categoriaSeleccionada}, esvigente=${vigenteHoy})}">
                            Anterior
                         </a>
                     </li>
 
                     <li class="page-item disabled">
                         <a class="page-link">
-                            Página <span th:text="${Promociones.number + 1}">1</span> de <span th:text="${Promociones.totalPages}">1</span>
+                            Página <span th:text="${promociones.number + 1}">1</span> de <span th:text="${promociones.totalPages}">1</span>
                         </a>
                     </li>
 
-                    <li class="page-item" th:classappend="${Promociones.last} ? 'disabled'">
+                    <li class="page-item" th:classappend="${promociones.last} ? 'disabled'">
                         <a class="page-link" 
-                           th:href="@{/(page=${Promociones.number + 1}, categoria=${categoriaSeleccionada}, esvigente=${vigenteHoy})}">
+                           th:href="@{/(page=${promociones.number + 1}, categoria=${categoriaSeleccionada}, esvigente=${vigenteHoy})}">
                            Siguiente
                         </a>
                     </li>
