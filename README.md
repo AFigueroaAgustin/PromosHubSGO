@@ -71,6 +71,18 @@ Pipeline de datos encargado de mantener la información actualizada automáticam
 * Java JDK 17+
 * Python 3.8+
 * Google Chrome (para Selenium)
+## ⚙️ Configuración del Entorno Local
+
+Este proyecto utiliza variables de entorno para proteger las credenciales de la base de datos.
+Antes de ejecutar la aplicación, debes configurar las siguientes variables en tu entorno de desarrollo (por ejemplo, en las *Run/Debug Configurations* de IntelliJ):
+
+| Variable de Entorno | Descripción | Valor de Ejemplo                                                  |
+| :--- | :--- |:------------------------------------------------------------------|
+| `DB_URL` | URL de conexión a la base de datos MySQL | `jdbc:mysql://localhost:3306/tu_base_de_datos?serverTimezone=UTC` |
+| `DB_USER_NAME` | Usuario de la base de datos | `admin`                                                            |
+| `DB_PASSWORD` | Contraseña de la base de datos | *(Tu contraseña local o dejar en blanco)*                         |
+
+
 
 ### 1. Levantar el Backend
 ```bash
