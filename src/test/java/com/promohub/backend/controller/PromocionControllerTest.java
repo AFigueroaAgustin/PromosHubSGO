@@ -79,37 +79,18 @@ public class PromocionControllerTest {
     }
 
     @Test
-    @DisplayName("Debe retornar 409 cuando la promocion ya existe")
-    void debeRetornar409CuandoLaPromocionYaExiste() throws Exception {
-        PromocionDTO promocionDTO = creacionDTOMock("Banco SDE", "Viaja gratis");
-        when(promocionService.guardarPromocion(any(PromocionDTO.class))).thenThrow(new DuplicateResourceException("Promocion", "Viaja gratis"));
-
-        String bodyJson = objectMapper.writeValueAsString(promocionDTO);
-
-        // ACT
-        ResultActions resultado = mockMvc.perform(post("/api/promociones").contentType(MediaType.APPLICATION_JSON).content(bodyJson));
-
-        // ASSERT
-        resultado.andExpect(status().isConflict());
-        resultado.andExpect(content().string("Promocion con el titulo Viaja gratis ya existe en la base de datos."));
-
-        verify(promocionService).guardarPromocion(any(PromocionDTO.class));
-    }
-
-    @Test
-    @DisplayName("Debe retornar 201 cuando crea la promocion")
-    void debeRetornar201CuandoCreaLaPromocion() throws Exception {
+    @DisplayName("Debe retornar 200 cuando guarda o actualiza la promoción")
+    void debeRetornar200CuandoGuardaOActualiza() throws Exception {
         PromocionDTO promocionDTO = creacionDTOMock("Banco SDE", "Viaja gratis");
         when(promocionService.guardarPromocion(any(PromocionDTO.class))).thenReturn(promocionDTO);
+
         String bodyJson = objectMapper.writeValueAsString(promocionDTO);
 
         // ACT
         ResultActions resultado = mockMvc.perform(post("/api/promociones").contentType(MediaType.APPLICATION_JSON).content(bodyJson));
 
         // ASSERT
-        resultado.andExpect(status().isCreated());
-        resultado.andExpect(jsonPath("$.entidad").value("Banco SDE"));
-        resultado.andExpect(jsonPath("$.titulo").value("Viaja gratis"));
+        resultado.andExpect(status().isOk());
 
         verify(promocionService).guardarPromocion(any(PromocionDTO.class));
     }

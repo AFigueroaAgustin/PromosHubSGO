@@ -82,7 +82,7 @@ public class PromocionServiceTest {
         String titulo = "Pasajes baratos";
         PromocionDTO dto = creacionDTOMock(entidad, titulo);
 
-        when(repositoryMock.existsByEntidadAndTituloAndDescripcion(dto.getEntidad(), dto.getTitulo(), dto.getDescripcion())).thenReturn(false);
+        when(repositoryMock.findByEntidadAndTitulo(dto.getEntidad(), dto.getTitulo())).thenReturn(Optional.empty());
 
         // Como el servicio crea el objeto internamente, usamos 'any(Promocion.class)'.
         when(repositoryMock.save(any(Promocion.class))).thenAnswer((iom) -> {
@@ -100,33 +100,38 @@ public class PromocionServiceTest {
         assertThat(resultado.getTitulo()).isEqualTo(titulo); // Se verifica que tomo el titulo del DTO
         assertThat(resultado.getEntidad()).isEqualTo(entidad);
 
-        verify(repositoryMock).existsByEntidadAndTituloAndDescripcion(
-                dto.getEntidad(), dto.getTitulo(), dto.getDescripcion()
-        );
+        verify(repositoryMock).findByEntidadAndTitulo(
+                dto.getEntidad(), dto.getTitulo());
         verify(repositoryMock, times(1)).save(any(Promocion.class)); // si llamos una sola vez al repositorio
     }
 
     @Test
-    @DisplayName("No debe guardar la promoción ya existente y debe lanzar excepción ")
+    @DisplayName("Debe guardar o actualizar la promoción y llamar una sola vez al metodo save ")
     void guardarPromocionExistenteTest() {
         //ARRANGE
         String entidad = "Banco Nacion";
         String titulo = "Pasajes baratos";
         PromocionDTO dto = creacionDTOMock(entidad, titulo);
+        Promocion promoVieja=crearPromocionMock(1L,titulo);
 
-        when(repositoryMock.existsByEntidadAndTituloAndDescripcion(
-                dto.getEntidad(), dto.getTitulo(), dto.getDescripcion()))
-                .thenReturn(true);
+        when(repositoryMock.findByEntidadAndTitulo(promoVieja.getEntidad(), promoVieja.getTitulo())).thenReturn(Optional.of(promoVieja));
 
-        DuplicateResourceException ex = assertThrows(
-                DuplicateResourceException.class, () -> servicioPromo.guardarPromocion(dto));
+        when(repositoryMock.save(any(Promocion.class))).thenAnswer((iom) -> {
+            Promocion promoguardada = iom.getArgument(0); // Agarra el objeto que le pasaron al save
+            promoguardada.setId(1L); // Le asignamos un ID ficticio
+            return promoguardada;
+        });
 
-        assertThat(ex.getMessage()).isEqualTo("La promocion con el titulo "+ dto.getTitulo() + " ya existe en la base de datos.");// verifica que el mensaje sea el correcto
 
-        verify(repositoryMock).existsByEntidadAndTituloAndDescripcion(
-                dto.getEntidad(), dto.getTitulo(), dto.getDescripcion()
-        );
-        verify(repositoryMock,never()).save(any(Promocion.class)); // verifica que no se guardo despues de la exepcion
+        //ACT
+        PromocionDTO resultado = servicioPromo.guardarPromocion(dto);
+
+        //ASSERT
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getId()).isEqualTo(promoVieja.getId());
+        assertThat(resultado.getDescripcion()).isEqualTo(dto.getDescripcion());
+
+        verify(repositoryMock,times(1)).save(any(Promocion.class));
     }
 
     @Test
@@ -137,9 +142,9 @@ public class PromocionServiceTest {
         String titulo = "Promo con fechas";
         PromocionDTO dto = creacionDTOMock(entidad, titulo);
 
-        when(repositoryMock.existsByEntidadAndTituloAndDescripcion(
-                dto.getEntidad(), dto.getTitulo(), dto.getDescripcion()))
-                .thenReturn(false);
+        when(repositoryMock.findByEntidadAndTitulo(
+                dto.getEntidad(), dto.getTitulo()))
+                .thenReturn(Optional.empty());
 
         when(repositoryMock.save(any(Promocion.class))).thenAnswer(iom -> {
             Promocion promoGuardada = iom.getArgument(0);
@@ -172,11 +177,9 @@ public class PromocionServiceTest {
         dto.setVigencia(null);
 
 
-        when(repositoryMock.existsByEntidadAndTituloAndDescripcion(
+        when(repositoryMock.findByEntidadAndTitulo(
                 dto.getEntidad(),
-                dto.getTitulo(),
-                dto.getDescripcion()
-        )).thenReturn(false);
+                dto.getTitulo())).thenReturn(Optional.empty());
 
         // ACT + ASSERT
         InvalidFechaException ex=assertThrows(InvalidFechaException.class,
@@ -199,11 +202,9 @@ public class PromocionServiceTest {
         dto.getVigencia().setInicio(null);
 
 
-        when(repositoryMock.existsByEntidadAndTituloAndDescripcion(
+        when(repositoryMock.findByEntidadAndTitulo(
                 dto.getEntidad(),
-                dto.getTitulo(),
-                dto.getDescripcion()
-        )).thenReturn(false);
+                dto.getTitulo())).thenReturn(Optional.empty());
 
         // ACT + ASSERT
         InvalidFechaException ex=assertThrows(InvalidFechaException.class,
@@ -225,11 +226,9 @@ public class PromocionServiceTest {
         dto.getVigencia().setFin(null);
 
 
-        when(repositoryMock.existsByEntidadAndTituloAndDescripcion(
+        when(repositoryMock.findByEntidadAndTitulo(
                 dto.getEntidad(),
-                dto.getTitulo(),
-                dto.getDescripcion()
-        )).thenReturn(false);
+                dto.getTitulo())).thenReturn(Optional.empty());
 
         // ACT + ASSERT
         InvalidFechaException ex=assertThrows(InvalidFechaException.class,
@@ -359,7 +358,7 @@ public class PromocionServiceTest {
     private Promocion crearPromocionMock(Long id, String titulo) {
         return new Promocion(
                 id,
-                "Banco Test", // entidad (valor por defecto)
+                "Banco Nacion", // entidad (valor por defecto)
                 titulo, // titulo (variable)
                 "Comida", // categoria (valor por defecto)
                 "Descripcion genérica", // descripcion

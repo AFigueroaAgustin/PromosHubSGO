@@ -29,9 +29,10 @@ public class PromocionController {
             @RequestParam(required = false) Boolean esvigente,
             @PageableDefault(sort = "fechaFin") Pageable pageable) {
 
-        Page<PromocionDTO> page=promocionService.filtrarPromociones(categoria, esvigente,pageable);
+        Page<PromocionDTO> page = promocionService.filtrarPromociones(categoria, esvigente, pageable);
         return ResponseEntity.ok(PageResponse.from(page));
     }
+
     // GET /api/promociones/{id}
     @GetMapping("/{id}")
     public ResponseEntity<PromocionDTO> obtenerPromocionesPorId(@PathVariable Long id) {
@@ -39,9 +40,11 @@ public class PromocionController {
     }
 
     @PostMapping
-    public ResponseEntity<PromocionDTO> crearPromocion(@Valid @RequestBody PromocionDTO dto) {
-            PromocionDTO creada = promocionService.guardarPromocion(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(creada);
+    public ResponseEntity<PromocionDTO> guardarActualizarPromocion(@Valid @RequestBody PromocionDTO dto) {
+        PromocionDTO creada = promocionService.guardarPromocion(dto);
+        return ResponseEntity.status(HttpStatus.OK).body(creada);
 
-}
+    }
+
+
 }

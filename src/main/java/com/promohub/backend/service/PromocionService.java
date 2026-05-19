@@ -10,6 +10,7 @@ import com.promohub.backend.repository.PromocionRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 
 import org.slf4j.Logger;
@@ -47,10 +48,18 @@ public class PromocionService {
     public PromocionDTO guardarPromocion(PromocionDTO dto) {
         logger.info("Intentando guardar promoción: {}", dto.getTitulo());
 
-        validarNoDuplicado(dto);
-
-        //si No existe se guarda
-            Promocion promo = new Promocion();
+        Optional<Promocion> promoCaja = promocionRepository.findByEntidadAndTitulo(
+                dto.getEntidad(), dto.getTitulo()
+        );
+        Promocion promo;
+        if (promoCaja.isPresent()) {
+            promo=promoCaja.get();
+            promo.setCategoria(dto.getCategoria());
+            promo.setDescripcion(dto.getDescripcion());
+            promo.setComercios(dto.getComerciosAdheridos());
+        }else {
+            //si No existe se guarda
+            promo = new Promocion();
             //Strings
             promo.setEntidad(dto.getEntidad());
             promo.setTitulo(dto.getTitulo());
@@ -58,7 +67,7 @@ public class PromocionService {
             promo.setDescripcion(dto.getDescripcion());
             //List
             promo.setComercios(dto.getComerciosAdheridos());
-
+        }
             //LocalDate
             RangoFechas fechas = convertirALocalDate(dto);
             promo.setFechaInicio(fechas.inicio());
