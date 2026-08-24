@@ -5,10 +5,16 @@ import com.promohub.backend.dto.VigenciaDTO;
 import com.promohub.backend.exception.DuplicateResourceException;
 import com.promohub.backend.exception.InvalidFechaException;
 import com.promohub.backend.exception.ResourceNotFoundException;
+import com.promohub.backend.model.Banco;
+import com.promohub.backend.model.Categoria;
+import com.promohub.backend.model.Comercio;
 import com.promohub.backend.model.Promocion;
-import com.promohub.backend.repository.PromocionRepository;
+import com.promohub.backend.model.TipoEmisor;
+import com.promohub.backend.repository.IComercioRepository;
+import com.promohub.backend.repository.IPromocionRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,120 +27,172 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class PromocionService {
+public class PromocionService implements IPromocionService {
 
-    private final PromocionRepository promocionRepository;
-    private static final Logger logger = LoggerFactory.getLogger(PromocionService.class);
+    private final IPromocionRepository promoRepo;
+    private final IComercioService comercioService;
+    private final IBancoService bancoService;
 
 
-    // inyeccion de dependencia mediante constructor
-    public PromocionService(PromocionRepository promocionRepository) {
-        this.promocionRepository = promocionRepository;
+    public PromocionService(IPromocionRepository promoRepo, IComercioService comercioService, IBancoService bancoService) {
+        this.promoRepo = promoRepo;
+        this.comercioService = comercioService;
+        this.bancoService = bancoService;
     }
 
     //Logica
-    public List<PromocionDTO> obtenerTodas() {
-        return promocionRepository.findAll().stream().map(this::toDTO).toList();
+    @Override
+    public Page<Promocion> traerPromociones(Pageable pageable) {
+        return promoRepo.findAll(pageable);
     }
-
-    public PromocionDTO getById(Long id) {
-        PromocionDTO resultado = promocionRepository.findById(id)
-                .map(this::toDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Promocion", id));
-        return resultado;
+    @Override
+    public Promocion buscarPromocion(Long id) {
+        return  promoRepo.findById(id).orElse(null);
     }
-
-    @Transactional
-    public PromocionDTO guardarPromocion(PromocionDTO dto) {
-        logger.info("Intentando guardar promoción: {}", dto.getTitulo());
-
-        Optional<Promocion> promoCaja = promocionRepository.findByEntidadAndTitulo(
-                dto.getEntidad(), dto.getTitulo()
-        );
-        Promocion promo;
-        if (promoCaja.isPresent()) {
-            promo=promoCaja.get();
-            promo.setCategoria(dto.getCategoria());
-            promo.setDescripcion(dto.getDescripcion());
-            promo.setComercios(dto.getComerciosAdheridos());
-        }else {
-            //si No existe se guarda
-            promo = new Promocion();
-            //Strings
-            promo.setEntidad(dto.getEntidad());
-            promo.setTitulo(dto.getTitulo());
-            promo.setCategoria(dto.getCategoria());
-            promo.setDescripcion(dto.getDescripcion());
-            //List
-            promo.setComercios(dto.getComerciosAdheridos());
+    @Override
+    public Promocion crearPromocion(Promocion promocionACrear){
+        if (promocionACrear==null){
+            return null;
         }
-            //LocalDate
-            RangoFechas fechas = convertirALocalDate(dto);
-            promo.setFechaInicio(fechas.inicio());
-            promo.setFechaFin(fechas.fin());
-
-            Promocion guardada = promocionRepository.save(promo);
-            logger.info("Promoción guardada con ID: {}", guardada.getId());
-            return toDTO(guardada);
-
+        return  promoRepo.save(promocionACrear);
     }
-
-    public Page<PromocionDTO> filtrarPromociones(String categoria, Boolean vigente, Pageable pageable) {
-        LocalDate fechaFiltro = (Boolean.TRUE.equals(vigente)) ? LocalDate.now() : null;
-        String categoriaFiltro = (categoria == null || categoria.isBlank()) ? null : categoria;
-
-        return promocionRepository.busquedaDinamica(categoriaFiltro, fechaFiltro, pageable).map(this::toDTO); //convierte cada promocion en DTO
-
-    }
-
-    private void validarNoDuplicado(PromocionDTO dto) {
-        boolean existe = promocionRepository.existsByEntidadAndTituloAndDescripcion(
-                dto.getEntidad(),
-                dto.getTitulo(),
-                dto.getDescripcion()
-        );
-
-        if (existe) {
-            logger.warn("La promoción '{}' ya existe. Saltando...", dto.getTitulo());
-            throw new DuplicateResourceException("La promocion", dto.getTitulo());
+    @Override
+    public boolean borrarPromocion(Long id) {
+        if (promoRepo.existsById(id)){
+            promoRepo.deleteById(id);
+            return true;
         }
+        return false;
     }
-
-    private record RangoFechas(LocalDate inicio, LocalDate fin) { // Se utliza para transportar los datos de las fechas
-
-    }
-
-    private RangoFechas convertirALocalDate(PromocionDTO dto) {
-
-        if (dto.getVigencia() == null ||
-                dto.getVigencia().getInicio() == null ||
-                dto.getVigencia().getFin() == null ||
-                dto.getVigencia().getInicio().isBlank() ||
-                dto.getVigencia().getFin().isBlank()) {
-
-            throw new InvalidFechaException("La promocion debe tener fecha de inicio y fecha de fin");
+    @Override
+    public Promocion actualizarPromocion(Long id,Promocion promocionActualizar){
+        if(promoRepo.existsById(id)){
+            Promocion promoBd=buscarPromocion(id);
+            promoBd.setTitulo(promocionActualizar.getTitulo());
+            promoBd.setDescripcion(promocionActualizar.getDescripcion());
+            promoBd.setPorcentajeDescuento(promocionActualizar.getPorcentajeDescuento());
+            promoBd.setTopeReintegro(promocionActualizar.getTopeReintegro());
+            promoBd.setFechaInicio(promocionActualizar.getFechaInicio());
+            promoBd.setFechaFin(promocionActualizar.getFechaFin());
+            promoBd.setDiasAplicacion(promocionActualizar.getDiasAplicacion());
+            promoBd.setCategoria(promocionActualizar.getCategoria());
+            promoBd.setBanco(promocionActualizar.getBanco());
+            promoBd.setComercios(promocionActualizar.getComercios());
+            return promoRepo.save(promoBd);
         }
-        LocalDate inicio = LocalDate.parse(dto.getVigencia().getInicio());
-        LocalDate fin = LocalDate.parse(dto.getVigencia().getFin());
-
-        return new RangoFechas(inicio, fin);
+        return null;
+    }
+    @Override
+    public Page<Promocion> buscarPorBanco(Long bancoId, Pageable pageable) {
+        return promoRepo.findByBancoId(bancoId, pageable);
     }
 
-    private PromocionDTO toDTO(Promocion p) {
-        PromocionDTO dto = new PromocionDTO();
-        dto.setId(p.getId());
-        dto.setEntidad(p.getEntidad());
-        dto.setTitulo(p.getTitulo());
-        dto.setCategoria(p.getCategoria());
-        dto.setDescripcion(p.getDescripcion());
-        dto.setComerciosAdheridos(p.getComercios());
+    public Page<Promocion> buscarPorCategoria(Categoria categoria, Pageable pageable) {
+        return promoRepo.findByCategoria(categoria, pageable);
+    }
 
-        VigenciaDTO vigenciaDTO = new VigenciaDTO();
-        vigenciaDTO.setInicio(p.getFechaInicio().toString());
-        vigenciaDTO.setFin(p.getFechaFin().toString());
-        dto.setVigencia(vigenciaDTO);
+    @Override
+    @Transactional // se lo utiliza para cuando haya un error no queden datos a medio subir.
+    public Promocion registrarDesdeDTO(PromocionDTO dto) {
+        if (dto==null){
+            return null;
+        }
 
-        return dto;
+
+        Banco bancoDb=bancoService.buscarPorCod(dto.getEntidad());
+        if (bancoDb==null){
+            bancoDb = bancoService.buscarPorNombre(dto.getEntidad());
+        }
+        if (bancoDb==null){
+            Banco nuevoBanco = new Banco();
+            nuevoBanco.setNombre(dto.getEntidad());
+            nuevoBanco.setCodigoIdentificador(dto.getEntidad().toUpperCase().replace(" ", "_"));
+            nuevoBanco.setTipoEmisor(TipoEmisor.desdeTexto(dto.getEntidad()));
+            nuevoBanco.setUrlLogo(obtenerLogoPorNombre(dto.getEntidad()));
+            bancoDb = bancoService.crearBanco(nuevoBanco);
+        } else {
+            boolean modificado = false;
+            if (bancoDb.getTipoEmisor() == null) {
+                bancoDb.setTipoEmisor(TipoEmisor.desdeTexto(dto.getEntidad()));
+                modificado = true;
+            }
+            if (bancoDb.getUrlLogo() == null || bancoDb.getUrlLogo().isBlank()) {
+                String logo = obtenerLogoPorNombre(dto.getEntidad());
+                if (logo != null) {
+                    bancoDb.setUrlLogo(logo);
+                    modificado = true;
+                }
+            }
+            if (modificado) {
+                bancoService.actualizarBanco(bancoDb.getId(), bancoDb);
+            }
+        }
+
+
+        Categoria categoriaEnum = Categoria.desdeTexto(dto.getCategoria());
+
+        List<Comercio> listaComercios = new ArrayList<>();
+        if (dto.getComerciosAdheridos() != null) {
+            for (String nombreComercio : dto.getComerciosAdheridos()) {
+                Comercio comercio = comercioService.buscarOCrear(nombreComercio, categoriaEnum);
+                if (comercio != null) {
+                    listaComercios.add(comercio);
+                }
+            }
+        }
+        LocalDate inicio = null;
+        LocalDate fin = null;
+        if (dto.getVigencia() != null) {
+            if (dto.getVigencia().getInicio() != null && !dto.getVigencia().getInicio().isBlank()) {
+                inicio = LocalDate.parse(dto.getVigencia().getInicio());
+            }
+            if (dto.getVigencia().getFin() != null && !dto.getVigencia().getFin().isBlank()) {
+                fin = LocalDate.parse(dto.getVigencia().getFin());
+            }
+        }
+
+        Optional<Promocion> promoExistente = promoRepo.findByBancoAndCategoriaAndTitulo(bancoDb, categoriaEnum, dto.getTitulo());
+        Promocion promoAGuardar = promoExistente.orElse(new Promocion());
+
+        String dias = dto.getDiasAplicacion();
+        if (dias == null || dias.isBlank()) {
+            String textoAnalisis = (dto.getTitulo() + " " + dto.getDescripcion()).toUpperCase();
+            if (textoAnalisis.contains("JUEVES")) dias = "Jueves";
+            else if (textoAnalisis.contains("MIERCOLES") || textoAnalisis.contains("MIÉRCOLES")) dias = "Miércoles";
+            else if (textoAnalisis.contains("LUNES")) dias = "Lunes";
+            else if (textoAnalisis.contains("MARTES")) dias = "Martes";
+            else if (textoAnalisis.contains("VIERNES A DOMINGO")) dias = "Viernes a Domingo";
+            else if (textoAnalisis.contains("SABADO Y DOMINGO") || textoAnalisis.contains("SÁBADO Y DOMINGO") || textoAnalisis.contains("FIN DE SEMANA")) dias = "Sábado y Domingo";
+            else dias = "Todos los días";
+        }
+
+        promoAGuardar.setTitulo(dto.getTitulo());
+        promoAGuardar.setDescripcion(dto.getDescripcion());
+        promoAGuardar.setDiasAplicacion(dias);
+        promoAGuardar.setBanco(bancoDb);
+        promoAGuardar.setCategoria(categoriaEnum);
+        promoAGuardar.setComercios(listaComercios);
+        promoAGuardar.setFechaInicio(inicio);
+        promoAGuardar.setFechaFin(fin);
+
+        return promoRepo.save(promoAGuardar);
+    }
+
+    private String obtenerLogoPorNombre(String entidad) {
+        if (entidad == null) return null;
+        String t = entidad.toUpperCase();
+        if (t.contains("SOL")) return "/images/logos/sol.png";
+        if (t.contains("UNICA") || t.contains("ÚNICA")) return "/images/logos/unica.png";
+        if (t.contains("SUCREDITO") || t.contains("SUCRÉDITO")) return "/images/logos/sucredito.svg";
+        if (t.contains("NARANJA")) return "/images/logos/naranjax.png";
+        if (t.contains("SANTIAGO") || t.contains("BSE")) return "/images/logos/bse.png";
+        if (t.contains("NACION") || t.contains("NACIÓN") || t.contains("BNA")) return "/images/logos/bna.png";
+        if (t.contains("MACRO")) return "/images/logos/macro.png";
+        if (t.contains("SANTANDER")) return "/images/logos/santander.png";
+        if (t.contains("GALICIA")) return "/images/logos/galicia.png";
+        if (t.contains("MODO")) return "/images/logos/modo.png";
+        if (t.contains("VIUMI") || t.contains("VIÜMI")) return "/images/logos/viumi.png";
+        return null;
     }
 
 }

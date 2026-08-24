@@ -1,137 +1,80 @@
 package com.promohub.backend.model;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import java.time.LocalDate;
 import java.util.List;
 
+
 @Entity
+@Table(name = "promociones", indexes = {
+        @Index(name = "idx_promo_banco_cat", columnList = "banco_id, categoria"),
+        @Index(name = "idx_promo_fecha_fin", columnList = "fecha_fin"),
+        @Index(name = "idx_promo_upsert", columnList = "banco_id, categoria, titulo")
+})
+@Getter
+@Setter
 public class Promocion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String entidad;
+    @Column(nullable = false) // hace que sea obligatorio este campo
     private String titulo;
-    private String categoria;
-
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT") // hace que permita mas de 255 caracteres
     private String descripcion;
-
+    @Column(name = "porcentaje_descuento")
+    private Double porcentajeDescuento;
+    @Column(name = "tope_reintegro")
+    private Double topeReintegro;
+    @Column(name = "fecha_inicio")
     private LocalDate fechaInicio;
+    @Column(name = "fecha_fin")
     private LocalDate fechaFin;
+    @Column(name = "dias_aplicacion", length = 150)
+    private String diasAplicacion;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private Categoria categoria=Categoria.VARIOS;
 
-    @ElementCollection
-    private List<String> comercios;
+    //RELACIONES
+    @ManyToOne(fetch = FetchType.LAZY) // esto es para que cargue de manera los datos cuando lo necesite.
+    @JoinColumn(name = "banco_id", nullable = false)
+    private Banco banco;
 
-    //Constructores
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "promocion_comercios",
+            joinColumns = @JoinColumn(name = "promocion_id"),// La columna que hace referencia a la clave primaria
+            inverseJoinColumns = @JoinColumn(name = "comercio_id")) //La columna que hace referencia a la clave primaria de la otra entidad
+    private List<Comercio> comercios;
+
+
+
+
     public Promocion() {
     }
 
-    public Promocion(Long id, String entidad, String titulo, String categoria, String descripcion, LocalDate fechaInicio, LocalDate fechaFin, List<String> comercios) {
+    public Promocion(Long id, String titulo, String descripcion,
+                     Double porcentajeDeDescuento, Double topeReintegro,
+                     LocalDate fechaInicio, LocalDate fechaFin, String diasAplicacion,
+                     Categoria categoria, Banco banco, List<Comercio> comercios) {
         this.id = id;
-        this.entidad = entidad;
         this.titulo = titulo;
-        this.categoria = categoria;
         this.descripcion = descripcion;
+        this.porcentajeDescuento = porcentajeDeDescuento;
+        this.topeReintegro = topeReintegro;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
+        this.diasAplicacion = diasAplicacion;
+        this.categoria = categoria;
+        this.banco = banco;
         this.comercios = comercios;
     }
-
-    private void validarTextoObligatorio(String valor, String campo) {
-        if (valor == null || valor.isBlank()) {
-            throw new IllegalArgumentException(campo + " es obligatorio");
-        }
+    public boolean isVigente() {
+        LocalDate hoy = LocalDate.now();
+        return (fechaInicio != null && fechaFin != null)
+                && (!hoy.isBefore(fechaInicio) && !hoy.isAfter(fechaFin));
     }
-
-    private void validarRangoFechas(LocalDate inicio, LocalDate fin) {
-        if (inicio != null && fin != null && fin.isBefore(inicio)) {
-            throw new IllegalArgumentException(
-                    "La fecha fin no puede ser anterior a la fecha inicio"
-            );
-        }
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public String getEntidad() {
-        return entidad;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public String getCategoria() {
-        return categoria;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public LocalDate getFechaInicio() {
-        return fechaInicio;
-    }
-
-    public LocalDate getFechaFin() {
-        return fechaFin;
-    }
-
-    public List<String> getComercios() {
-        return comercios;
-    }
-
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setEntidad(String entidad) {
-        validarTextoObligatorio(entidad, "La Entidad");
-        this.entidad = entidad;
-    }
-
-    public void setTitulo(String titulo) {
-        validarTextoObligatorio(titulo, "El Titulo");
-        this.titulo = titulo;
-    }
-
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public void setFechaInicio(LocalDate fechaInicio) {
-        
-        this.fechaInicio = fechaInicio;
-        validarRangoFechas(fechaInicio, fechaFin);
-    }
-
-    public void setFechaFin(LocalDate fechaFin) {
-        this.fechaFin = fechaFin;
-        validarRangoFechas(fechaInicio, fechaFin);
-    }
-
-    public void setComercios(List<String> comercios) {
-        this.comercios = (comercios != null) ? comercios : List.of();
-    }
-
-    public boolean estaVigente(LocalDate fecha) {
-        return (fecha.isEqual(fechaInicio) || fecha.isAfter(fechaInicio))
-                && (fecha.isEqual(fechaFin) || fecha.isBefore(fechaFin));
-    }
-
 }
