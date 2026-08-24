@@ -39,7 +39,9 @@ public class PromocionController {
                                                               @RequestParam(required = false) Categoria categoria,
                                                               @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)Pageable pageable){
         Page<Promocion> resultado;
-        if (bancoId != null) {
+        if (bancoId != null && categoria != null) {
+            resultado = promoService.buscarPorBancoYCategoria(bancoId, categoria, pageable);
+        } else if (bancoId != null) {
             resultado = promoService.buscarPorBanco(bancoId, pageable);
         } else if (categoria != null) {
             resultado = promoService.buscarPorCategoria(categoria, pageable);

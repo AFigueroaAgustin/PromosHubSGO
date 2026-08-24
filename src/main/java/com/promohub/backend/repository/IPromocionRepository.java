@@ -20,4 +20,5 @@ public interface IPromocionRepository extends JpaRepository<Promocion, Long> {
 
     Page<Promocion> findByCategoria(Categoria categoria, Pageable pageable);
 
+    Page<Promocion> findByBancoIdAndCategoria(Long bancoId, Categoria categoria, Pageable pageable);
 }

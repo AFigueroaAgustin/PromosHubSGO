@@ -49,5 +49,6 @@ bin/
 .DS_Store
 Thumbs.db
 
-# --- Logs ---
+# --- Logs & Binaries ---
 *.log
+*.exe

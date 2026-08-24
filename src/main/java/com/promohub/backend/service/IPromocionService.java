@@ -27,8 +27,8 @@ public interface IPromocionService {
 
     Page<Promocion> buscarPorCategoria(Categoria categoria, Pageable pageable);
 
+    Page<Promocion> buscarPorBancoYCategoria(Long bancoId, Categoria categoria, Pageable pageable);
+
     // Para recibir el DTO de Python y usar el 'findByBancoAndTitulo' del repositorio
     Promocion registrarDesdeDTO(PromocionDTO dto);
-
-
 }

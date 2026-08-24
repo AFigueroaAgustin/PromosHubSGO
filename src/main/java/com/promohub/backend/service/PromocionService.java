@@ -87,8 +87,14 @@ public class PromocionService implements IPromocionService {
         return promoRepo.findByBancoId(bancoId, pageable);
     }
 
+    @Override
     public Page<Promocion> buscarPorCategoria(Categoria categoria, Pageable pageable) {
         return promoRepo.findByCategoria(categoria, pageable);
+    }
+
+    @Override
+    public Page<Promocion> buscarPorBancoYCategoria(Long bancoId, Categoria categoria, Pageable pageable) {
+        return promoRepo.findByBancoIdAndCategoria(bancoId, categoria, pageable);
     }
 
     @Override

@@ -126,6 +126,22 @@ public class PromocionServiceTest {
         verify(promoRepo).findByBancoId(1L, pageable);
     }
 
+    @Test
+    @DisplayName("Debe buscar promociones por banco y categoria paginadas")
+    void buscarPorBancoYCategoriaTest() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Promocion p = crearPromocionMock(1L, "Promo Supermercado Banco");
+        Page<Promocion> pagina = new PageImpl<>(List.of(p));
+
+        when(promoRepo.findByBancoIdAndCategoria(1L, Categoria.SUPERMERCADOS, pageable)).thenReturn(pagina);
+
+        Page<Promocion> resultado = promoService.buscarPorBancoYCategoria(1L, Categoria.SUPERMERCADOS, pageable);
+
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getTotalElements()).isEqualTo(1);
+        verify(promoRepo).findByBancoIdAndCategoria(1L, Categoria.SUPERMERCADOS, pageable);
+    }
+
     private Promocion crearPromocionMock(Long id, String titulo) {
         Banco banco = new Banco();
         banco.setId(1L);

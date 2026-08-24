@@ -37,7 +37,9 @@ public class HomeController {
         Page<Promocion> paginaPromos;
 
         //Aplicamos los filtros según lo que haya seleccionado el usuario
-        if (bancoId != null) {
+        if (bancoId != null && categoria != null) {
+            paginaPromos = promoService.buscarPorBancoYCategoria(bancoId, categoria, pageable);
+        } else if (bancoId != null) {
             paginaPromos = promoService.buscarPorBanco(bancoId, pageable);
         } else if (categoria != null) {
             paginaPromos = promoService.buscarPorCategoria(categoria, pageable);
