@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:fragment="head_estilos">
+    <!-- Script Anti-Parpadeo (Anti-FOUC): Determina el tema antes de dibujar el primer píxel -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('promohub_theme') || 'dark';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        })();
+    </script>
+
     <!-- Tipografía Inter de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +20,7 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <!-- Estilos Personalizados de PromoHUB SGO -->
+    <!-- Estilos Personalizados de Punto Promo SGO -->
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 <body>

@@ -1,28 +1,42 @@
-/*Hoja de Estilos Principal (Dark & Light Mode)*/
+/* ==========================================================================
+   Punto Promo SGO — Hoja de Estilos Principal (Design System)
+   ========================================================================== */
 
-
+/* --- Variables de Tema Oscuro (Relieve y Profundidad Envolvente) --- */
 :root[data-bs-theme="dark"] {
-    --bg-body: #090d16;
+    --bg-body: radial-gradient(ellipse 130% 70% at 50% -5%, #1e293b 0%, #0f172a 45%, #090d16 85%, #05070c 100%);
     --card-bg: #111827;
-    --card-border: #1f2937;
-    --accent-color: #3b82f6;
-    --text-main: #f3f4f6;
-    --text-muted: #9ca3af;
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-relief-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --accent-color: #00d369;
+    --accent-blue: #3b82f6;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
     --badge-bank-bg: #1e293b;
     --badge-bank-border: #334155;
     --badge-bank-text: #60a5fa;
     --store-pill-bg: #1f2937;
     --store-pill-text: #d1d5db;
     --logo-container-bg: #1e293b;
+    --highlight-pill-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    --highlight-pill-text: #ffffff;
     --hero-title-grad: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%);
     --topbar-border: rgba(255, 255, 255, 0.1);
+    --badge-days-bg: rgba(245, 158, 11, 0.15);
+    --badge-days-text: #fbbf24;
+    --badge-days-border: rgba(245, 158, 11, 0.3);
 }
 
+/* --- Variables de Tema Claro (Degradado Envolvente de Ancho Completo) --- */
 :root[data-bs-theme="light"] {
-    --bg-body: #f8fafc;
+    --bg-body: radial-gradient(ellipse 130% 70% at 50% -5%, #dbeafe 0%, #eef4ff 40%, #f8fafc 85%, #f8fafc 100%);
     --card-bg: #ffffff;
     --card-border: #e2e8f0;
-    --accent-color: #2563eb;
+    --card-relief-highlight: inset 0 1px 0 rgba(255, 255, 255, 1);
+    --card-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    --accent-color: #00a852;
+    --accent-blue: #2563eb;
     --text-main: #0f172a;
     --text-muted: #64748b;
     --badge-bank-bg: #f1f5f9;
@@ -31,19 +45,26 @@
     --store-pill-bg: #f8fafc;
     --store-pill-text: #334155;
     --logo-container-bg: #f8fafc;
+    --highlight-pill-bg: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    --highlight-pill-text: #ffffff;
     --hero-title-grad: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
-    --topbar-border: rgba(0, 0, 0, 0.1);
+    --topbar-border: rgba(0, 0, 0, 0.08);
+    --badge-days-bg: #fef3c7;
+    --badge-days-text: #78350f;
+    --badge-days-border: #fde68a;
 }
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--bg-body);
+    background: var(--bg-body);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--text-main);
     min-height: 100vh;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* --- Título y Subtítulo Minimalista --- */
+/* --- Tipografía y Títulos --- */
 .hero-title {
     font-weight: 800;
     letter-spacing: -0.03em;
@@ -52,7 +73,18 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-/* --- Filtros y Pills de Navegación --- */
+.brand-pill-highlight {
+    background: var(--highlight-pill-bg);
+    color: var(--highlight-pill-text);
+    padding: 0.15rem 0.85rem;
+    border-radius: 9999px;
+    font-weight: 800;
+    display: inline-block;
+    letter-spacing: -0.02em;
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+}
+
+/* --- Filtros y Botones --- */
 .filter-pill {
     border-radius: 9999px;
     font-size: 0.85rem;
@@ -69,28 +101,50 @@ body {
 }
 
 .filter-pill:hover, .filter-pill.active {
-    background-color: var(--accent-color);
+    background-color: var(--accent-blue);
     color: #ffffff !important;
-    border-color: var(--accent-color);
+    border-color: var(--accent-blue);
     transform: translateY(-1px);
 }
 
-/* --- Tarjeta de Promoción --- */
+/* --- Carrusel Móvil de Borde a Borde --- */
+@media (max-width: 991.98px) {
+    .scroll-bancos-mobile {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        margin-left: -16px !important;
+        margin-right: -16px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        padding-top: 4px !important;
+        padding-bottom: 8px !important;
+    }
+    .scroll-bancos-mobile::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* --- Tarjetas de Promoción con Relieve --- */
 .promo-card {
     background-color: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 20px;
+    box-shadow: var(--card-relief-highlight), var(--card-shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     overflow: hidden;
 }
 
 .promo-card:hover {
     transform: translateY(-4px);
-    border-color: var(--accent-color);
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: var(--card-relief-highlight), 0 20px 30px -10px rgba(0, 0, 0, 0.6);
 }
 
-/* --- Badges de Banco y Logos --- */
+/* --- Badges de Identificación y Logos --- */
 .badge-bank {
     background-color: var(--badge-bank-bg);
     color: var(--badge-bank-text);
@@ -115,11 +169,10 @@ body {
     transition: all 0.2s ease;
 }
 
-/* --- Badges de Categoría y Descuento --- */
 .badge-category {
     font-size: 0.75rem;
     background: rgba(59, 130, 246, 0.1);
-    color: var(--accent-color);
+    color: var(--accent-blue);
     border-radius: 6px;
     padding: 0.25rem 0.5rem;
     font-weight: 600;
@@ -134,7 +187,20 @@ body {
     padding: 0.3rem 0.6rem;
 }
 
-/* --- Píldoras de Comercios Adheridos --- */
+/* Badge de Días de Aplicación con Alto Contraste */
+.badge-days {
+    background-color: var(--badge-days-bg);
+    color: var(--badge-days-text);
+    border: 1px solid var(--badge-days-border);
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    padding: 0.25rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .store-pill {
     background-color: var(--store-pill-bg);
     color: var(--store-pill-text);
@@ -157,7 +223,30 @@ body {
 }
 
 .page-link:hover, .page-item.active .page-link {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
     color: #ffffff;
+}
+
+/* --- Botón Flotante: Volver Arriba --- */
+.btn-scroll-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-scroll-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }

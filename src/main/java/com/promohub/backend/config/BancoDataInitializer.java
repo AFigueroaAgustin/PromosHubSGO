@@ -54,6 +54,7 @@ public class BancoDataInitializer implements CommandLineRunner {
         if (nombre.contains("SANTANDER")) return "/images/logos/santander.png";
         if (nombre.contains("GALICIA")) return "/images/logos/galicia.png";
         if (nombre.contains("MODO")) return "/images/logos/modo.png";
+        if (nombre.contains("MERCADO PAGO") || nombre.contains("MERCADOPAGO")) return "/images/logos/mercadopago.png";
         if (nombre.contains("VIUMI") || nombre.contains("VIÜMI")) return "/images/logos/viumi.png";
         return null;
     }

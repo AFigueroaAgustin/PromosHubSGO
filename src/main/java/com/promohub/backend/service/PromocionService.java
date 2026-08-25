@@ -197,6 +197,7 @@ public class PromocionService implements IPromocionService {
         if (t.contains("SANTANDER")) return "/images/logos/santander.png";
         if (t.contains("GALICIA")) return "/images/logos/galicia.png";
         if (t.contains("MODO")) return "/images/logos/modo.png";
+        if (t.contains("MERCADO PAGO") || t.contains("MERCADOPAGO")) return "/images/logos/mercadopago.png";
         if (t.contains("VIUMI") || t.contains("VIÜMI")) return "/images/logos/viumi.png";
         return null;
     }
