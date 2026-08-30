@@ -1,98 +1,184 @@
-# 🚀 PromoHUB SGO - API & Data Pipeline
+# 🚀 Punto Promo SGO — Plataforma Web, API REST & Pipeline ETL
 
-> **Sistema centralizado para la gestión y consulta de promociones bancarias en Santiago del Estero.**
+![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.12-6DB33F?logo=springboot&logoColor=white)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-3.1_Swagger-85EA2D?logo=swagger&logoColor=black)
+![MySQL](https://img.shields.io/badge/MySQL-8.0_(3NF)-4479A1?logo=mysql&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.x_ETL-3776AB?logo=python&logoColor=white)
+![Selenium](https://img.shields.io/badge/Selenium-Automation-43B02A?logo=selenium&logoColor=white)
 
-Este proyecto combina una arquitectura **Backend robusta en Java (Spring Boot)** con un sistema de **automatización de datos en Python**. El objetivo es scrapear, procesar y exponer promociones financieras (bancos, tarjetas locales) a través de una API REST y una interfaz web amigable.
+> **Plataforma integral para la centralización, filtrado dinámico y consulta de promociones bancarias y beneficios comerciales en Santiago del Estero y La Banda.**
 
----
-
-## 🏗️ Arquitectura del Proyecto
-
-El sistema se divide en dos módulos principales:
-
-1. **Core Backend (Java):** API RESTful y Web App que gestiona la base de datos y la visualización.
-2. **Data Engineering (Python):** Scripts ETL (Extract, Transform, Load) que obtienen los datos de las webs oficiales y alimentan al backend.
+Este proyecto combina una **arquitectura Backend robusta en Java (Spring Boot 3)** con un **Pipeline de Ingeniería de Datos (ETL) en Python**. Su propósito es automatizar la extracción de beneficios financieros dispersos en portales oficiales, normalizarlos en una base de datos relacional y exponerlos a través de una API REST documentada y una interfaz web interactiva.
 
 ---
 
-## ☕ Módulo Backend (Java + Spring Boot)
+## 🏗️ Arquitectura General del Sistema
 
-Aplicación construida bajo el patrón MVC y N-Capas para asegurar escalabilidad y mantenimiento.
+```mermaid
+flowchart TD
+    subgraph EXT ["1. Extracción Multi-Fuente (Python)"]
+        F1["Tarjeta Sol"]
+        F2["Banco Nación"]
+        F3["Tarjeta Única"]
+        F4["Tarjeta Sucrédito"]
+        F5["MODO & Mercado Pago"]
+        F6["Catálogo Santiago"]
+    end
+
+    subgraph ETL ["2. Pipeline de Normalización (Python)"]
+        P1["Limpieza de Caracteres & Regex"]
+        P2["Parseo de Fechas a ISO-8601"]
+        P3["Diccionario de Comercios Adheridos"]
+    end
+
+    subgraph API ["3. Backend & API REST (Java + Spring Boot 3)"]
+        C1["PromocionController (OpenAPI 3 / Swagger)"]
+        V1["Validaciones Jakarta (@Valid DTO)"]
+        S1["PromocionService (Lógica de Negocio)"]
+        R1["Spring Data JPA Repository"]
+    end
+
+    subgraph DB ["4. Persistencia Relacional (MySQL 3NF)"]
+        T1[("bancos")]
+        T2[("promociones")]
+        T3[("promocion_comercios (N:M)")]
+        T4[("comercios")]
+    end
+
+    subgraph UI ["5. Capa de Presentación"]
+        WEB["Punto Promo SGO (Thymeleaf + Bootstrap 5)"]
+        SWAG["Swagger UI (/swagger-ui/index.html)"]
+    end
+
+    EXT -->|Selenium / Requests| ETL
+    ETL -->|HTTP POST requests.Session| C1
+    C1 --> V1 --> S1 --> R1 --> DB
+    DB --> S1 --> WEB
+    C1 -.-> SWAG
+```
+
+---
+
+## ☕ Módulo Backend (Java 17 + Spring Boot 3)
+
+Desarrollado bajo **arquitectura en capas desacoplada** (Controlador, Servicio, Repositorio, DTO y Mapeadores).
+
+### 🛠️ Tecnologías del Backend
+* **Lenguaje:** Java 17 (LTS)
+* **Framework:** Spring Boot 3.5.x
+* **Acceso a Datos:** Spring Data JPA / Hibernate
+* **Base de Datos:** MySQL 8 (Normalización 3NF con índices estratégicos)
+* **Documentación:** SpringDoc OpenAPI 3.1 & Swagger UI
+* **Validación:** Jakarta Validation (Bean Validation)
+* **Frontend Integrado:** Thymeleaf + Bootstrap 5 (Server-Side Rendering con persistencia de filtros)
+* **Testing:** JUnit 5, Mockito
+
+### ✨ Funcionalidades y Decisiones Técnicas
+1. **Documentación Viva con Swagger:** Todos los endpoints y contratos DTO están anotados con `@Tag`, `@Operation`, `@Schema` y `@ApiResponses`, accesibles interactivamente desde `/swagger-ui/index.html`.
+2. **Filtrado Dinámico y Paginación Eficiente:** Búsqueda combinada por entidad bancaria (`bancoId`), categoría comercial (`categoria` Enum) y estado de vigencia, implementada con `Pageable` para optimizar el rendimiento.
+3. **Validación Estricta de Contratos (DTO Pattern):** La API protege la integridad de los datos mediante validaciones automáticas (`@NotBlank`, `@NotNull`, `@FutureOrPresent`, `@Valid`).
+4. **Manejo Global de Errores:** Centralizado con `@RestControllerAdvice` y `@ExceptionHandler`, garantizando respuestas JSON estructuradas con códigos HTTP estándar (`400 Bad Request`, `404 Not Found`, `409 Conflict`).
+
+---
+
+## 🗄️ Modelo Relacional de Base de Datos (MySQL)
+
+El modelo de datos fue diseñado bajo **Tercera Forma Normal (3NF)**:
+* **`bancos` (1:N `promociones`):** Almacena las entidades emisoras (bancos tradicionales, tarjetas regionales, billeteras virtuales).
+* **`promociones` (N:M `comercios`):** Relacionadas mediante la tabla asociativa intermedia **`promocion_comercios`**.
+* **Índices de Alto Rendimiento:**
+  * `idx_promo_banco_cat` (`banco_id, categoria`): Acelera las búsquedas compuestas más frecuentes.
+  * `idx_promo_fecha_fin` (`fecha_fin`): Optimiza la depuración de promociones vencidas.
+  * `idx_comercio_nombre` (`nombre`): Agiliza la búsqueda por comercio.
+
+---
+
+## 🐍 Módulo de Automatización & Data Pipeline (Python ETL)
+
+Pipeline de ingeniería de datos encargado de extraer, normalizar y cargar la información sin intervención manual.
 
 ### 🛠️ Tecnologías
-* **Lenguaje:** Java 17
-* **Framework:** Spring Boot 3
-* **Datos:** Spring Data JPA / Hibernate
-* **Base de Datos:** MySQL (XAMPP)
-* **Frontend:** Thymeleaf + Bootstrap 5
-* **Validaciones:** Jakarta Validation (Bean Validation)
+* **Python 3.x**
+* **Selenium WebDriver:** Navegación en páginas dinámicas (SPA con JavaScript).
+* **Requests (`Session`):** Comunicación HTTP con pool de conexiones hacia la API REST.
+* **Regex & Datetime:** Normalización de fechas heterogéneas a formato SQL (`YYYY-MM-DD`).
 
-### ✨ Funcionalidades Clave
-* **API RESTful:** Endpoints para crear, listar y filtrar promociones.
-* **Paginación del Lado del Servidor:** Implementación eficiente con `Pageable` para manejar grandes volúmenes de datos.
-* **Filtros Dinámicos:** Búsqueda por categorías, vigencia y texto libre con persistencia de estado entre páginas.
-* **Validación de Datos:** Control estricto de inputs mediante DTOs y anotaciones `@Valid`.
-
-### 🧠 Decisiones de Arquitectura y Patrones
-* **Patrón Upsert Pragmático:** El endpoint de ingesta (`POST /api/promociones`) está optimizado para su principal cliente (el Scraper en Python). Utiliza una **Clave Natural** (Entidad + Título) para evaluar la persistencia. En lugar de lanzar errores `409 Conflict` ante registros existentes, delega en Hibernate la actualización (`UPDATE`) o creación (`INSERT`).
-* **API Orientada al Cliente:** El controlador unifica la respuesta en un `200 OK`, lo que elimina peticiones dobles de verificación por parte del bot, reduciendo la latencia general del sistema.
-* **Testing Estricto:** Suite de pruebas desarrollada con JUnit 5 y Mockito, garantizando la ausencia de falsos positivos y manteniendo el motor de mocks libre de *Unnecessary Stubs* (código muerto) tras cada refactorización del negocio.
+### 🔄 Fases del Pipeline
+1. **Extracción Multi-Fuente (`Fuentes/`):**
+   * Automatización sobre 7 portales: *Tarjeta Sol, Banco Nación, Tarjeta Única, Tarjeta Sucrédito, MODO, Mercado Pago y Catálogo Santiago*.
+2. **Normalización (`normalizacion/procesador.py`):**
+   * Estandarización de rubros comerciales.
+   * Cruce con `diccionario_comercios.py` para unificar nombres de locales adheridos.
+3. **Carga e Ingesta HTTP (`carga/cargar_datos.py`):**
+   * Envío en lote vía `requests.Session()` a la API REST (`POST /api/v1/promociones`).
+   * Manejo inteligente de respuestas (`201 Created` vs `409 Conflict` por duplicados).
+   * Generación de reporte de auditoría: `resumen_carga.json`.
 
 ---
 
-## 🐍 Módulo de Automatización (Python)
+## 📡 Referencia de la API REST
 
-Pipeline de datos encargado de mantener la información actualizada automáticamente.
-
-### 🛠️ Tecnologías (Librerías)
-* **Selenium:** Navegación automatizada en sitios dinámicos (SPA).
-* **BeautifulSoup4:** Parsing y extracción de HTML de alta velocidad.
-* **Requests:** Comunicación HTTP para enviar datos a la API Java.
-* **Regex & Datetime:** Normalización y limpieza de textos y fechas.
-
-### 🔄 Flujo de Datos (Pipeline)
-
-1. **Extracción (`main.py`):**
-   * Inicia un navegador Chrome controlado por software.
-   * Navega a los sitios de las entidades financieras (ej. Tarjeta Sol).
-   * Extrae el HTML crudo renderizado (manejando tiempos de carga JS).
-   * Genera un archivo intermedio: `promociones_sol.json`.
-
-2. **Transformación (`procesador.py`):**
-   * Lee los datos crudos.
-   * **Limpieza:** Normaliza espacios y caracteres especiales.
-   * **Fechas:** Convierte formatos de texto (ej: "12-05-2025") a objetos fecha SQL (`YYYY-MM-DD`).
-   * **Categorización:** Separa lógica de "Comercios Adheridos" vs "Legales/Términos".
-   * Genera dataset limpio: `promociones_procesadas.json`.
-
-3. **Carga (`cargar_datos.py`):**
-   * Lee el dataset limpio e itera sobre cada promoción.
-   * Realiza peticiones **HTTP POST** al backend Java (`http://localhost:8080/api/promociones`), simulando ser un cliente externo.
+| Método | Endpoint | Descripción | Parámetros Clave |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/promociones` | Listado paginado con filtros dinámicos | `bancoId` (Long), `categoria` (Enum), `page`, `size` |
+| `POST` | `/api/v1/promociones` | Ingesta y creación de una nueva promoción | `PromocionDTO` (JSON validado en el body) |
+| `GET` | `/api/v1/promociones/{id}` | Consulta de promoción por ID | `id` (Path variable) |
+| `GET` | `/v3/api-docs` | Especificación OpenAPI 3.1 en JSON | — |
+| `GET` | `/swagger-ui/index.html` | Interfaz interactiva de Swagger UI | — |
 
 ---
 
-## 🚀 Instalación y Ejecución
+## 🚀 Instalación y Puesta en Marcha
 
 ### Requisitos Previos
-* Java JDK 17+
-* Python 3.8+
-* Google Chrome (para Selenium)
+* **Java JDK 17+**
+* **Maven 3.8+**
+* **MySQL 8.0+**
+* **Python 3.8+** y Google Chrome
 
-### ⚙️ Configuración del Entorno Local
+### 1. Configuración de Variables de Entorno
+Configurá las credenciales en tu entorno local o IDE (*Run/Debug Configurations*):
 
-Este proyecto utiliza variables de entorno para proteger las credenciales de la base de datos.
-Antes de ejecutar la aplicación, debes configurar las siguientes variables en tu entorno de desarrollo (por ejemplo, en las *Run/Debug Configurations* de IntelliJ):
-
-| Variable de Entorno | Descripción | Valor de Ejemplo |
+| Variable | Descripción | Ejemplo |
 | :--- | :--- | :--- |
-| `DB_URL` | URL de conexión a la base de datos MySQL | `jdbc:mysql://localhost:3306/tu_base_de_datos?serverTimezone=UTC` |
-| `DB_USER_NAME` | Usuario de la base de datos | `admin` |
-| `DB_PASSWORD` | Contraseña de la base de datos | *(Tu contraseña local o dejar en blanco)* |
+| `DB_URL` | URL de conexión JDBC a MySQL | `jdbc:mysql://localhost:3306/promohub_sde?serverTimezone=UTC` |
+| `DB_USER_NAME` | Usuario de base de datos | `root` |
+| `DB_PASSWORD` | Contraseña de base de datos | *(Tu contraseña o vacío)* |
 
-### 1. Levantar el Backend
+### 2. Ejecutar el Backend (Java)
 ```bash
 # Clonar el repositorio
-git clone [https://github.com/TU_USUARIO/PromosHubSGO.git](https://github.com/TU_USUARIO/PromosHubSGO.git)
+git clone https://github.com/AFigueroaAgustin/PromosHubSGO.git
 
-# Ejecutar con Maven (o desde NetBeans/IntelliJ/Eclipse)
+# Ingresar al directorio
+cd backend
+
+# Ejecutar con Maven
 ./mvnw spring-boot:run
+```
+* La aplicación web estará disponible en: `http://localhost:8080`
+* La documentación Swagger UI en: `http://localhost:8080/swagger-ui/index.html`
+
+### 3. Ejecutar el Pipeline ETL (Python)
+```bash
+cd ../WebScrapingPromos
+
+# Instalar dependencias
+pip install selenium requests beautifulsoup4
+
+# Ejecutar extracción y carga completa
+python main.py
+```
+
+---
+
+## 👤 Autor
+
+**Agustín Eduardo Figueroa**  
+*Desarrollador Backend · Santiago del Estero, Argentina*
+
+* 🌐 [Portafolio Web](https://afigueroaagustin.github.io/Portafolio-FigueroaAgustin/)
+* 💼 [LinkedIn](https://www.linkedin.com/in/agustinfigueroa390/)
+* 🐙 [GitHub](https://github.com/AFigueroaAgustin)
+* 📩 [agustinfigueroa390@gmail.com](mailto:agustinfigueroa390@gmail.com)
