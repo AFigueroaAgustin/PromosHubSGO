@@ -1,6 +1,9 @@
 package com.promohub.backend.controller;
 
 import com.promohub.backend.dto.PromocionDTO;
+import com.promohub.backend.dto.response.PageResponse;
+import com.promohub.backend.dto.response.PromocionResponseDTO;
+import com.promohub.backend.mapper.PromocionMapper;
 import com.promohub.backend.model.Categoria;
 import com.promohub.backend.model.Promocion;
 import com.promohub.backend.service.IPromocionService;
@@ -20,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "PROMOCIONES", description = "Operaciones para obtener y filtrar Promociones")
 @RestController
-@RequestMapping("/api/v1/promociones")
+@RequestMapping({"/api/v1/promociones", "/api/promociones"})
 public class PromocionController {
 
     private final IPromocionService promoService;
@@ -52,14 +55,14 @@ public class PromocionController {
             @ApiResponse(responseCode = "400", description = "Parámetros de búsqueda o paginación inválidos.")
     })
     @GetMapping
-    public ResponseEntity<Page<Promocion>> obtenerPromociones(@Parameter(
+    public ResponseEntity<PageResponse<PromocionResponseDTO>> obtenerPromociones(@Parameter(
                                                                       description = "ID del banco emisor para filtrar",
                                                                       example = "1",
                                                                       required = false)
                                                                   @RequestParam(required = false) Long bancoId,
                                                               @Parameter(
                                                                       description = "Categoría comercial de la promoción",
-                                                                      example = "SUPERMERCADOS", // O un valor real que tenga tu enum Categoria
+                                                                      example = "SUPERMERCADOS",
                                                                       required = false)
                                                               @RequestParam(required = false) Categoria categoria,
                                                               @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -73,7 +76,7 @@ public class PromocionController {
         } else {
             resultado = promoService.traerPromociones(pageable);
         }
-        return ResponseEntity.ok(resultado);
+        return ResponseEntity.ok(PageResponse.from(resultado, PromocionMapper::toDTO));
 
     }
 
@@ -81,7 +84,7 @@ public class PromocionController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Promocion encontrada"),
             @ApiResponse(responseCode = "404", description = "Promocion no encontrada con ese ID")})
     @GetMapping("/{id}")
-    public ResponseEntity<Promocion> traerPromocion(
+    public ResponseEntity<PromocionResponseDTO> traerPromocion(
             @Parameter(
                     description = "ID de la promocion a buscar",
                     example = "1",
@@ -90,7 +93,7 @@ public class PromocionController {
             @PathVariable Long id) {
         Promocion promo = promoService.buscarPromocion(id);
         if (promo != null) {
-            return ResponseEntity.ok(promo);
+            return ResponseEntity.ok(PromocionMapper.toDTO(promo));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }

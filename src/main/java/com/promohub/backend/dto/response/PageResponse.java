@@ -19,12 +19,24 @@ public class PageResponse<T> {
     }
 
     public static <T> PageResponse<T> from(Page<T> page) {
-        PageResponse<T> r=new PageResponse<>();
+        PageResponse<T> r = new PageResponse<>();
         r.content = page.getContent();
         r.totalElements = page.getTotalElements();
-        r.totalPages=page.getTotalPages();
-        r.pageNumber=page.getNumber();
-        r.pageSize=page.getSize();
+        r.totalPages = page.getTotalPages();
+        r.pageNumber = page.getNumber();
+        r.pageSize = page.getSize();
+        r.first = page.isFirst();
+        r.last = page.isLast();
+        return r;
+    }
+
+    public static <S, T> PageResponse<T> from(Page<S> page, java.util.function.Function<S, T> mapper) {
+        PageResponse<T> r = new PageResponse<>();
+        r.content = page.getContent().stream().map(mapper).toList();
+        r.totalElements = page.getTotalElements();
+        r.totalPages = page.getTotalPages();
+        r.pageNumber = page.getNumber();
+        r.pageSize = page.getSize();
         r.first = page.isFirst();
         r.last = page.isLast();
         return r;
